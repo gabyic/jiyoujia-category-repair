@@ -1,0 +1,26 @@
+/*
+ * Repair rules for numeric 极有家 shop subdomains:
+ * https://jiyoujia<shop-id>.jiyoujia.com/category.htm
+ *
+ * The shop decoration stylesheet sets an extreme header height, replaces the
+ * header with an invalid-item image, and hides the native category/product
+ * modules. These narrowly scoped overrides restore the original modules.
+ */
+
+.tshop-psm-shop-header-enterprise,
+.tb-header {
+  height: auto !important;
+  min-height: 0 !important;
+  background: none !important;
+  background-image: none !important;
+}
+
+.tshop-psm-shop-header-enterprise .header-box,
+.tshop-psm-shop-header2 .header-box {
+  display: block !important;
+}
+
+.tshop-pbsm-shop-srch-list,
+.tshop-pbsm-shop-item-cates {
+  display: block !important;
+}

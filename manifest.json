@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "极有家店铺页修复",
+  "version": "1.2.0",
+  "description": "将极有家店铺首页跳转到全店分类页，并恢复分类导航和商品列表。",
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.jiyoujia.com/*"
+      ],
+      "js": [
+        "redirect-home.js"
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "https://*.jiyoujia.com/category.htm*"
+      ],
+      "css": [
+        "repair.css"
+      ],
+      "run_at": "document_start"
+    }
+  ]
+}
