@@ -12,23 +12,25 @@ https://jiyoujia<店铺编号>.jiyoujia.com/category.htm*
 
 ## Chrome 安装
 
-1. 打开 `chrome://extensions/`。
-2. 打开右上角“开发者模式”。
-3. 点击“加载已解压的扩展程序”。
-4. 选择本目录：
+1. 点击 GitHub 页面右上角的 `Code` → `Download ZIP`，下载后解压；也可以使用 Git 克隆本仓库。
+2. 打开 `chrome://extensions/`。
+3. 打开右上角“开发者模式”。
+4. 点击“加载已解压的扩展程序”。
+5. 选择解压后的 `jiyoujia-category-repair` 文件夹，确保该文件夹内直接包含 `manifest.json`。
+6. 打开极有家店铺首页验证扩展是否生效。
 
-   ```text
-   /Users/zoupengfei/Documents/shopfiy/browser-extensions/jiyoujia-category-repair
-   ```
-
-5. 回到扩展页面点击本扩展的“重新加载”，然后打开店铺首页验证。
+只有修改扩展源码后，才需要回到扩展管理页面点击“重新加载”。
 
 ## Edge 安装
 
-1. 打开 `edge://extensions/`。
-2. 打开“开发人员模式”。
-3. 点击“加载解压缩的扩展”。
-4. 选择本目录；修改扩展文件后，需要在扩展页面点击“重新加载”。
+1. 点击 GitHub 页面右上角的 `Code` → `Download ZIP`，下载后解压；也可以使用 Git 克隆本仓库。
+2. 打开 `edge://extensions/`。
+3. 打开“开发人员模式”。
+4. 点击“加载解压缩的扩展”。
+5. 选择解压后的 `jiyoujia-category-repair` 文件夹，确保该文件夹内直接包含 `manifest.json`。
+6. 打开极有家店铺首页验证扩展是否生效。
+
+只有修改扩展源码后，才需要回到扩展管理页面点击“重新加载”。
 
 ## 验证
 
