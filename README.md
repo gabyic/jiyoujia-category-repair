@@ -35,7 +35,7 @@ https://<自定义子域名>.jiyoujia.com/category.htm*
 
 ## Chrome 安装
 
-1. 点击 GitHub 页面右上角的 `Code` → `Download ZIP`，下载后解压；也可以使用 Git 克隆本仓库。
+1. [下载最新版扩展安装包](https://github.com/gabyic/taobao-shop-page-repair/releases/latest/download/taobao-shop-page-repair.zip)，下载后解压。
 2. 打开 `chrome://extensions/`。
 3. 打开右上角“开发者模式”。
 4. 点击“加载已解压的扩展程序”。
@@ -46,7 +46,7 @@ https://<自定义子域名>.jiyoujia.com/category.htm*
 
 ## Edge 安装
 
-1. 点击 GitHub 页面右上角的 `Code` → `Download ZIP`，下载后解压；也可以使用 Git 克隆本仓库。
+1. [下载最新版扩展安装包](https://github.com/gabyic/taobao-shop-page-repair/releases/latest/download/taobao-shop-page-repair.zip)，下载后解压。
 2. 打开 `edge://extensions/`。
 3. 打开“开发人员模式”。
 4. 点击“加载解压缩的扩展”。
