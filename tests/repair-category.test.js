@@ -8,6 +8,7 @@ const {
   applyImportantStyles,
   countRepairRoles,
   createMutationObserver,
+  ensureRepairStylesheet,
   isEffectivelyHidden,
   isSupportedCategoryLocation,
   repairBrokenOverlays,
@@ -16,25 +17,18 @@ const {
   shouldRestoreLinkGroup,
 } = require("../repair-category.js");
 
-test("Manifest 1.6.0 在两类数字店铺分类页注入条件式脚本", () => {
-  assert.equal(manifest.version, "1.6.0");
+test("Manifest 1.7.0 在淘宝和极有家子域名注入公共识别器", () => {
+  assert.equal(manifest.version, "1.7.0");
   const repairEntries = manifest.content_scripts.filter((entry) =>
     entry.js?.includes("repair-category.js")
   );
 
-  assert.equal(repairEntries.length, 2);
-  assert.ok(
-    repairEntries.some((entry) =>
-      entry.matches.includes("https://*.jiyoujia.com/category.htm*")
-    )
-  );
-  assert.ok(
-    repairEntries.some(
-      (entry) =>
-        entry.matches.includes("https://*.taobao.com/category.htm*") &&
-        entry.include_globs.includes("https://shop*.taobao.com/category.htm*")
-    )
-  );
+  assert.equal(repairEntries.length, 1);
+  assert.deepEqual(repairEntries[0].js, ["shop-context.js", "repair-category.js"]);
+  assert.ok(repairEntries[0].matches.includes("https://*.jiyoujia.com/category.htm*"));
+  assert.ok(repairEntries[0].matches.includes("https://*.taobao.com/category.htm*"));
+  assert.equal(repairEntries[0].include_globs, undefined);
+  assert.equal(repairEntries[0].css, undefined);
 });
 
 test("Manifest 提供最小权限的通用状态面板", () => {
@@ -44,7 +38,18 @@ test("Manifest 提供最小权限的通用状态面板", () => {
   assert.match(manifest.action.default_title, /店铺页修复/);
 });
 
-test("只匹配数字极有家和数字淘宝店铺分类页", () => {
+test("数字店铺直接支持，自定义域名必须带店铺结构", () => {
+  const customShopDocument = {
+    title: "自定义灯具店-淘宝网",
+    querySelector(selector) {
+      return selector === '[class*="tshop-"]' ? {} : null;
+    },
+    querySelectorAll(selector) {
+      if (selector === 'a[href*="/category.htm"]') return [{}, {}];
+      if (selector === 'a[href*="item.taobao.com/item.htm"]') return [{}, {}, {}];
+      return [];
+    },
+  };
   const accepted = [
     ["jiyoujia492511957.jiyoujia.com", "/category.htm"],
     ["shop203317430.taobao.com", "/category.htm"],
@@ -53,7 +58,6 @@ test("只匹配数字极有家和数字淘宝店铺分类页", () => {
   const rejected = [
     ["www.taobao.com", "/category.htm"],
     ["item.taobao.com", "/category.htm"],
-    ["shopabc.taobao.com", "/category.htm"],
     ["shop203317430.taobao.com", "/"],
     ["shop203317430.taobao.com", "/item.htm"],
   ];
@@ -64,6 +68,47 @@ test("只匹配数字极有家和数字淘宝店铺分类页", () => {
   for (const [hostname, pathname] of rejected) {
     assert.equal(isSupportedCategoryLocation({ hostname, pathname }), false);
   }
+  assert.equal(
+    isSupportedCategoryLocation(
+      { hostname: "ikfs0orn453wy1jhzjt0c5bydawewrm.taobao.com", pathname: "/category.htm" },
+      customShopDocument
+    ),
+    true
+  );
+  assert.equal(
+    isSupportedCategoryLocation(
+      { hostname: "random.taobao.com", pathname: "/category.htm" },
+      { ...customShopDocument, title: "淘宝网", querySelector: () => null, querySelectorAll: () => [] }
+    ),
+    false
+  );
+});
+
+test("修复 CSS 只由确认后的 JavaScript 动态加载", () => {
+  const appended = [];
+  const documentLike = {
+    getElementById() {
+      return null;
+    },
+    createElement() {
+      return {};
+    },
+    head: {
+      appendChild(element) {
+        appended.push(element);
+      },
+    },
+  };
+  const runtimeLike = {
+    getURL(file) {
+      return `chrome-extension://test/${file}`;
+    },
+  };
+
+  assert.equal(ensureRepairStylesheet(documentLike, runtimeLike), true);
+  assert.equal(appended.length, 1);
+  assert.equal(appended[0].rel, "stylesheet");
+  assert.equal(appended[0].href, "chrome-extension://test/repair.css");
 });
 
 test("只修复靠近页面顶部且异常超高的店招候选", () => {

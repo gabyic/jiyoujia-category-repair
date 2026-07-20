@@ -5,12 +5,13 @@ const path = require("node:path");
 
 const {
   createStatusModel,
+  formatShopTypeLabel,
   formatPageLabel,
   isSupportedUrl,
   parseRepairActions,
 } = require("../popup.js");
 
-test("通用状态面板只支持数字店铺分类页", () => {
+test("通用状态面板接受两平台候选分类页并排除普通页面", () => {
   assert.equal(
     isSupportedUrl("https://shop203317430.taobao.com/category.htm?pageNo=2"),
     true
@@ -19,8 +20,19 @@ test("通用状态面板只支持数字店铺分类页", () => {
     isSupportedUrl("https://jiyoujia492511957.jiyoujia.com/category.htm"),
     true
   );
+  assert.equal(
+    isSupportedUrl("https://ikfs0orn453wy1jhzjt0c5bydawewrm.taobao.com/category.htm"),
+    true
+  );
   assert.equal(isSupportedUrl("https://item.taobao.com/item.htm?id=1"), false);
+  assert.equal(isSupportedUrl("https://www.taobao.com/category.htm"), false);
   assert.equal(isSupportedUrl("https://shop203317430.taobao.com/"), false);
+});
+
+test("面板区分数字域名、自定义店铺域名和未确认页面", () => {
+  assert.equal(formatShopTypeLabel({ supported: true, hostType: "numeric" }), "数字店铺域名");
+  assert.equal(formatShopTypeLabel({ supported: true, hostType: "custom" }), "自定义店铺域名");
+  assert.equal(formatShopTypeLabel({ supported: false }), "未确认店铺页面");
 });
 
 test("修复统计可解析旧值并为新字段提供默认值", () => {

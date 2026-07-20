@@ -1,5 +1,9 @@
 (() => {
+  const ShopContext =
+    globalThis.ShopCategoryContext ||
+    (typeof require === "function" ? require("./shop-context.js") : null);
   const REPAIR_ATTRIBUTE = "data-shop-category-repair-role";
+  const REPAIR_STYLESHEET_ID = "shop-category-repair-stylesheet";
   const EXCLUDED_HINT_PATTERN =
     /(?:carousel|dialog|drawer|dropdown|modal|mobile|popup|slider|tab[-_]?panel|template)/i;
   const HEADER_HINT_PATTERN =
@@ -20,18 +24,30 @@
     'a[href*="search.htm"]',
   ].join(",");
 
-  function isSupportedCategoryLocation(locationLike) {
-    if (!locationLike) {
+  function isSupportedCategoryLocation(locationLike, documentLike) {
+    return Boolean(
+      ShopContext?.isSupportedCategoryLocation(locationLike, documentLike)
+    );
+  }
+
+  function ensureRepairStylesheet(documentLike, runtimeLike) {
+    if (documentLike?.getElementById?.(REPAIR_STYLESHEET_ID)) {
+      return true;
+    }
+    if (!documentLike?.createElement || !runtimeLike?.getURL) {
       return false;
     }
 
-    const hostname = String(locationLike.hostname || "").toLowerCase();
-    const pathname = String(locationLike.pathname || "").toLowerCase();
-    const isSupportedHost =
-      /^jiyoujia\d+\.jiyoujia\.com$/.test(hostname) ||
-      /^shop\d+\.taobao\.com$/.test(hostname);
-
-    return isSupportedHost && pathname === "/category.htm";
+    const link = documentLike.createElement("link");
+    link.id = REPAIR_STYLESHEET_ID;
+    link.rel = "stylesheet";
+    link.href = runtimeLike.getURL("repair.css");
+    const target = documentLike.head || documentLike.documentElement;
+    if (!target?.appendChild) {
+      return false;
+    }
+    target.appendChild(link);
+    return true;
   }
 
   function elementHint(element) {
@@ -410,11 +426,30 @@
 
   function bootstrap(windowLike) {
     const documentLike = windowLike.document;
-    if (!isSupportedCategoryLocation(windowLike.location)) {
+    if (!ShopContext?.isCandidateCategoryLocation(windowLike.location)) {
       return;
     }
 
+    let started = false;
     const start = () => {
+      if (started || !isSupportedCategoryLocation(windowLike.location, documentLike)) {
+        return false;
+      }
+      started = true;
+      const context = ShopContext.classifyShopContext(
+        windowLike.location,
+        documentLike
+      );
+      documentLike.documentElement?.setAttribute(
+        "data-shop-category-context",
+        context.hostType
+      );
+      documentLike.documentElement?.setAttribute(
+        "data-shop-category-signals",
+        context.signals.join(",")
+      );
+      ensureRepairStylesheet(documentLike, globalThis.chrome?.runtime);
+
       let timer = null;
       const scheduleRepair = (delay = 120) => {
         if (timer !== null) {
@@ -435,12 +470,21 @@
         scheduleRepair
       );
       windowLike.setTimeout(() => observer?.disconnect?.(), 30000);
+      return true;
+    };
+
+    const startWithRetries = () => {
+      if (start()) {
+        return;
+      }
+      windowLike.setTimeout(start, 600);
+      windowLike.setTimeout(start, 1800);
     };
 
     if (documentLike.readyState === "loading") {
-      documentLike.addEventListener("DOMContentLoaded", start, { once: true });
+      documentLike.addEventListener("DOMContentLoaded", startWithRetries, { once: true });
     } else {
-      start();
+      startWithRetries();
     }
   }
 
@@ -448,6 +492,7 @@
     applyImportantStyles,
     countRepairRoles,
     createMutationObserver,
+    ensureRepairStylesheet,
     isEffectivelyHidden,
     isExcludedContainer,
     isSupportedCategoryLocation,

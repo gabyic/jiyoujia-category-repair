@@ -1,4 +1,7 @@
 (() => {
+  const ShopContext =
+    globalThis.ShopCategoryContext ||
+    (typeof require === "function" ? require("./shop-context.js") : null);
   const EMPTY_ACTIONS = Object.freeze({
     headers: 0,
     products: 0,
@@ -9,13 +12,17 @@
   function isSupportedUrl(value) {
     try {
       const url = new URL(value);
-      const supportedHost =
-        /^jiyoujia\d+\.jiyoujia\.com$/i.test(url.hostname) ||
-        /^shop\d+\.taobao\.com$/i.test(url.hostname);
-      return supportedHost && url.pathname.toLowerCase() === "/category.htm";
+      return Boolean(ShopContext?.isCandidateCategoryLocation(url));
     } catch (_error) {
       return false;
     }
+  }
+
+  function formatShopTypeLabel(context) {
+    if (!context?.supported) {
+      return "未确认店铺页面";
+    }
+    return context.hostType === "custom" ? "自定义店铺域名" : "数字店铺域名";
   }
 
   function formatPageLabel(value) {
@@ -73,6 +80,7 @@
   const api = {
     createStatusModel,
     formatPageLabel,
+    formatShopTypeLabel,
     isSupportedUrl,
     parseRepairActions,
   };
@@ -139,12 +147,20 @@
   }
 
   async function readRepairStatus(tabId) {
+    await chrome.scripting.executeScript({
+      target: { tabId },
+      files: ["shop-context.js"],
+    });
     const executionResults = await chrome.scripting.executeScript({
       target: { tabId },
       func: () => ({
         status: document.documentElement.getAttribute("data-shop-category-repair"),
         actions: document.documentElement.getAttribute(
           "data-shop-category-repair-actions"
+        ),
+        context: globalThis.ShopCategoryContext?.classifyShopContext?.(
+          location,
+          document
         ),
       }),
     });
@@ -154,7 +170,7 @@
   async function collectFromPage(tabId) {
     await chrome.scripting.executeScript({
       target: { tabId },
-      files: ["diagnostics-page.js"],
+      files: ["shop-context.js", "diagnostics-page.js"],
     });
 
     const executionResults = await chrome.scripting.executeScript({
@@ -254,6 +270,17 @@
       }
 
       const repairState = await readRepairStatus(tab.id);
+      pageUrl.textContent = `${formatPageLabel(tab?.url || "")} · ${formatShopTypeLabel(
+        repairState?.context
+      )}`;
+      if (!repairState?.context?.supported) {
+        renderMessage(
+          "不符合店铺页特征",
+          "该子域名未通过店铺结构检测，不会跳转或修复；可复制诊断信息继续排查。",
+          "warning"
+        );
+        return;
+      }
       renderStatus(createStatusModel(repairState?.status, repairState?.actions));
     })
     .catch((error) => {

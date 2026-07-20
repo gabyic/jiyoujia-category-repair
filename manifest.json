@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "淘宝/极有家店铺页修复",
-  "version": "1.6.0",
-  "description": "将数字编号的淘宝和极有家店铺首页跳转到全店分类页，条件式恢复异常模块，并提供本地一键诊断。",
+  "version": "1.7.0",
+  "description": "识别淘宝和极有家数字或自定义店铺域名，将店铺首页跳转到分类页，并条件式恢复异常模块。",
   "permissions": [
     "activeTab",
     "scripting"
@@ -14,51 +14,36 @@
   "content_scripts": [
     {
       "matches": [
-        "https://*.jiyoujia.com/*"
-      ],
-      "js": [
-        "redirect-home.js"
-      ],
-      "run_at": "document_start"
-    },
-    {
-      "matches": [
+        "https://*.jiyoujia.com/*",
         "https://*.taobao.com/*"
       ],
-      "include_globs": [
-        "https://shop*.taobao.com/*"
-      ],
       "js": [
+        "shop-context.js",
         "redirect-home.js"
       ],
       "run_at": "document_start"
     },
     {
       "matches": [
-        "https://*.jiyoujia.com/category.htm*"
-      ],
-      "css": [
-        "repair.css"
-      ],
-      "js": [
-        "repair-category.js"
-      ],
-      "run_at": "document_start"
-    },
-    {
-      "matches": [
+        "https://*.jiyoujia.com/category.htm*",
         "https://*.taobao.com/category.htm*"
       ],
-      "include_globs": [
-        "https://shop*.taobao.com/category.htm*"
-      ],
-      "css": [
-        "repair.css"
-      ],
       "js": [
+        "shop-context.js",
         "repair-category.js"
       ],
       "run_at": "document_start"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "repair.css"
+      ],
+      "matches": [
+        "https://*.jiyoujia.com/*",
+        "https://*.taobao.com/*"
+      ]
     }
   ]
 }

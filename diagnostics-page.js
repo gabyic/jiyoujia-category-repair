@@ -1,4 +1,7 @@
 (() => {
+  const ShopContext =
+    globalThis.ShopCategoryContext ||
+    (typeof require === "function" ? require("./shop-context.js") : null);
   const API_KEY = "__SHOP_CATEGORY_DIAGNOSTICS__";
   const PRODUCT_LINK_SELECTOR = [
     'a[href*="item.taobao.com/item.htm"]',
@@ -42,13 +45,10 @@
     }
   }
 
-  function isSupportedCategoryLocation(locationLike) {
-    const hostname = String(locationLike?.hostname || "").toLowerCase();
-    const pathname = String(locationLike?.pathname || "").toLowerCase();
-    const supportedHost =
-      /^jiyoujia\d+\.jiyoujia\.com$/.test(hostname) ||
-      /^shop\d+\.taobao\.com$/.test(hostname);
-    return supportedHost && pathname === "/category.htm";
+  function isSupportedCategoryLocation(locationLike, documentLike) {
+    return Boolean(
+      ShopContext?.isSupportedCategoryLocation(locationLike, documentLike)
+    );
   }
 
   function isStyleHidden(metrics) {
@@ -286,16 +286,36 @@
   }
 
   function collect(documentLike = document, windowLike = window) {
-    const supported = isSupportedCategoryLocation(windowLike.location);
+    const context = ShopContext?.classifyShopContext(
+      windowLike.location,
+      documentLike
+    ) || {
+      supported: false,
+      reason: "shop-context-unavailable",
+      signals: [],
+      counts: {},
+    };
+    const supported =
+      ShopContext?.isCandidateCategoryLocation(windowLike.location) &&
+      context.supported;
     const bodyText = String(documentLike.body?.innerText || "");
     const productLinkCount = documentLike.querySelectorAll(PRODUCT_LINK_SELECTOR).length;
     const categoryLinkCount = documentLike.querySelectorAll(CATEGORY_LINK_SELECTOR).length;
     const pageLinkCount = documentLike.querySelectorAll(PAGE_LINK_SELECTOR).length;
 
     return {
-      schemaVersion: 2,
+      schemaVersion: 3,
       generatedAt: new Date().toISOString(),
       supported,
+      shopContext: {
+        platform: context.platform || null,
+        hostType: context.hostType || null,
+        reason: context.reason,
+        score: context.score || 0,
+        requiredScore: context.requiredScore || 0,
+        signals: context.signals || [],
+        counts: context.counts || {},
+      },
       extensionVersion:
         globalThis.chrome?.runtime?.getManifest?.().version || "unknown",
       page: {

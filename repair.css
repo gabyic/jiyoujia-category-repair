@@ -1,7 +1,7 @@
 /*
- * Repair rules for numeric 极有家 and Taobao shop subdomains:
- * https://jiyoujia<shop-id>.jiyoujia.com/category.htm
- * https://shop<shop-id>.taobao.com/category.htm
+ * Repair rules for confirmed 极有家 and Taobao shop subdomains.
+ * repair-category.js loads this file only after shop-context.js confirms a
+ * numeric shop host or a custom platform subdomain with shop DOM signals.
  *
  * Baseline compatibility rules for the known legacy shop DOM. Newer shop
  * structures are handled by repair-category.js only when it detects an
