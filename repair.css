@@ -1,6 +1,7 @@
 /*
- * Repair rules for numeric 极有家 shop subdomains:
+ * Repair rules for numeric 极有家 and Taobao shop subdomains:
  * https://jiyoujia<shop-id>.jiyoujia.com/category.htm
+ * https://shop<shop-id>.taobao.com/category.htm
  *
  * The shop decoration stylesheet sets an extreme header height, replaces the
  * header with an invalid-item image, and hides the native category/product

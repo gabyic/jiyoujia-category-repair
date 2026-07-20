@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "极有家店铺页修复",
-  "version": "1.2.0",
-  "description": "将极有家店铺首页跳转到全店分类页，并恢复分类导航和商品列表。",
+  "name": "淘宝/极有家店铺页修复",
+  "version": "1.3.0",
+  "description": "将数字编号的淘宝和极有家店铺首页跳转到全店分类页，并恢复分类导航和商品列表。",
   "content_scripts": [
     {
       "matches": [
@@ -15,7 +15,31 @@
     },
     {
       "matches": [
+        "https://*.taobao.com/*"
+      ],
+      "include_globs": [
+        "https://shop*.taobao.com/*"
+      ],
+      "js": [
+        "redirect-home.js"
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
         "https://*.jiyoujia.com/category.htm*"
+      ],
+      "css": [
+        "repair.css"
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "https://*.taobao.com/category.htm*"
+      ],
+      "include_globs": [
+        "https://shop*.taobao.com/category.htm*"
       ],
       "css": [
         "repair.css"

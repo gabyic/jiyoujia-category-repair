@@ -1,9 +1,15 @@
 (() => {
-  const shopHostPattern = /^jiyoujia\d+\.jiyoujia\.com$/;
+  const shopHostPatterns = [
+    /^jiyoujia\d+\.jiyoujia\.com$/,
+    /^shop\d+\.taobao\.com$/,
+  ];
   const homePaths = new Set(["/", "/index.htm"]);
+  const isSupportedShop = shopHostPatterns.some((pattern) =>
+    pattern.test(location.hostname)
+  );
 
   if (
-    !shopHostPattern.test(location.hostname) ||
+    !isSupportedShop ||
     !homePaths.has(location.pathname)
   ) {
     return;
