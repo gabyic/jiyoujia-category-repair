@@ -1,5 +1,7 @@
 # 淘宝店铺页面修复助手
 
+项目地址：https://github.com/gabyic/taobao-shop-page-repair
+
 这个 Manifest V3 扩展作用于淘宝和极有家店铺页，支持数字店铺域名以及通过页面结构确认的自定义子域名：
 
 ```text
@@ -37,7 +39,7 @@ https://<自定义子域名>.jiyoujia.com/category.htm*
 2. 打开 `chrome://extensions/`。
 3. 打开右上角“开发者模式”。
 4. 点击“加载已解压的扩展程序”。
-5. 选择解压后的 `jiyoujia-category-repair` 文件夹，确保该文件夹内直接包含 `manifest.json`。
+5. 选择解压后的 `taobao-shop-page-repair` 文件夹，确保该文件夹内直接包含 `manifest.json`。
 6. 打开淘宝或极有家店铺首页，验证扩展是否生效。
 
 只有修改扩展源码后，才需要回到扩展管理页面点击“重新加载”。
@@ -48,7 +50,7 @@ https://<自定义子域名>.jiyoujia.com/category.htm*
 2. 打开 `edge://extensions/`。
 3. 打开“开发人员模式”。
 4. 点击“加载解压缩的扩展”。
-5. 选择解压后的 `jiyoujia-category-repair` 文件夹，确保该文件夹内直接包含 `manifest.json`。
+5. 选择解压后的 `taobao-shop-page-repair` 文件夹，确保该文件夹内直接包含 `manifest.json`。
 6. 打开淘宝或极有家店铺首页，验证扩展是否生效。
 
 只有修改扩展源码后，才需要回到扩展管理页面点击“重新加载”。
