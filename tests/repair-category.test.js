@@ -17,8 +17,9 @@ const {
   shouldRestoreLinkGroup,
 } = require("../repair-category.js");
 
-test("Manifest 1.7.0 在淘宝和极有家子域名注入公共识别器", () => {
-  assert.equal(manifest.version, "1.7.0");
+test("Manifest 1.7.1 使用统一名称并在淘宝和极有家子域名注入公共识别器", () => {
+  assert.equal(manifest.version, "1.7.1");
+  assert.equal(manifest.name, "淘宝店铺页面修复助手");
   const repairEntries = manifest.content_scripts.filter((entry) =>
     entry.js?.includes("repair-category.js")
   );
@@ -35,7 +36,7 @@ test("Manifest 提供最小权限的通用状态面板", () => {
   assert.deepEqual(manifest.permissions, ["activeTab", "scripting"]);
   assert.equal(manifest.host_permissions, undefined);
   assert.equal(manifest.action.default_popup, "popup.html");
-  assert.match(manifest.action.default_title, /店铺页修复/);
+  assert.equal(manifest.action.default_title, "淘宝店铺页面修复助手");
 });
 
 test("数字店铺直接支持，自定义域名必须带店铺结构", () => {
