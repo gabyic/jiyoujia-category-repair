@@ -1,8 +1,16 @@
 {
   "manifest_version": 3,
   "name": "淘宝/极有家店铺页修复",
-  "version": "1.4.0",
-  "description": "将数字编号的淘宝和极有家店铺首页跳转到全店分类页，并条件式恢复异常店招、分类导航和商品列表。",
+  "version": "1.6.0",
+  "description": "将数字编号的淘宝和极有家店铺首页跳转到全店分类页，条件式恢复异常模块，并提供本地一键诊断。",
+  "permissions": [
+    "activeTab",
+    "scripting"
+  ],
+  "action": {
+    "default_title": "淘宝/极有家店铺页修复",
+    "default_popup": "popup.html"
+  },
   "content_scripts": [
     {
       "matches": [

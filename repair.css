@@ -25,3 +25,15 @@
 .tshop-pbsm-shop-item-cates {
   display: block !important;
 }
+
+/*
+ * JavaScript only marks an overlay after confirming that it is hidden,
+ * abnormally large and still covering the viewport. Keeping the hidden-state
+ * selector here makes the repair reversible when the shop activates the menu.
+ */
+[data-shop-category-repair-role="overlay"].popup-hidden,
+[data-shop-category-repair-role="overlay"].overlay-hidden,
+[data-shop-category-repair-role="overlay"].ks-overlay-hidden,
+[data-shop-category-repair-role="overlay"][aria-hidden="true"] {
+  display: none !important;
+}

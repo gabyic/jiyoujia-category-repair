@@ -7,6 +7,9 @@
   const PRODUCT_HINT_PATTERN =
     /(?:goods|grid|item|list|product|search|shop[-_]?item|shop[-_]?srch)/i;
   const CATEGORY_HINT_PATTERN = /(?:cat|cate|category|menu|nav)/i;
+  const OVERLAY_HINT_PATTERN = /(?:overlay|popup)/i;
+  const HIDDEN_OVERLAY_STATE_PATTERN =
+    /(?:^|\s)(?:ks-)?(?:overlay|popup)-hidden(?:\s|$)/i;
   const PRODUCT_LINK_SELECTOR = [
     'a[href*="item.taobao.com/item.htm"]',
     'a[href*="detail.tmall.com/item.htm"]',
@@ -89,6 +92,88 @@
       top < Math.max(600, viewportHeight * 0.75) &&
       height >= threshold
     );
+  }
+
+  function shouldRepairBrokenOverlay(metrics) {
+    const width = Number(metrics?.width || 0);
+    const height = Number(metrics?.height || 0);
+    const viewportWidth = Math.max(Number(metrics?.viewportWidth || 0), 320);
+    const viewportHeight = Math.max(Number(metrics?.viewportHeight || 0), 600);
+    const abnormalWidth = width >= Math.max(3000, viewportWidth * 3);
+    const abnormalHeight = height >= Math.max(5000, viewportHeight * 5);
+
+    return (
+      Boolean(metrics?.hiddenByState) &&
+      OVERLAY_HINT_PATTERN.test(String(metrics?.hint || "")) &&
+      (abnormalWidth || abnormalHeight) &&
+      Boolean(metrics?.descendantCoversViewport) &&
+      Number(metrics?.productLinkCount || 0) <= 2
+    );
+  }
+
+  function hasHiddenOverlayState(element) {
+    const className =
+      typeof element?.className === "string" ? element.className : "";
+    return (
+      HIDDEN_OVERLAY_STATE_PATTERN.test(className) ||
+      element?.getAttribute?.("aria-hidden") === "true"
+    );
+  }
+
+  function rectCoversViewport(rect, viewportWidth, viewportHeight) {
+    return (
+      Number(rect?.left || 0) <= 0 &&
+      Number(rect?.top || 0) <= 0 &&
+      Number(rect?.right || 0) >= viewportWidth &&
+      Number(rect?.bottom || 0) >= viewportHeight
+    );
+  }
+
+  function hasViewportCoveringDescendant(element, windowLike) {
+    const viewportWidth = Math.max(Number(windowLike.innerWidth || 0), 320);
+    const viewportHeight = Math.max(Number(windowLike.innerHeight || 0), 600);
+    const descendants = Array.from(element.querySelectorAll?.("*") || []).slice(0, 180);
+
+    return descendants.some((descendant) =>
+      rectCoversViewport(
+        descendant.getBoundingClientRect(),
+        viewportWidth,
+        viewportHeight
+      )
+    );
+  }
+
+  function repairBrokenOverlays(documentLike, windowLike) {
+    const selector = '[class*="popup" i], [class*="overlay" i]';
+    const candidates = Array.from(documentLike.querySelectorAll(selector)).slice(0, 250);
+    let repairs = 0;
+
+    for (const element of candidates) {
+      if (element.hasAttribute?.(REPAIR_ATTRIBUTE)) {
+        continue;
+      }
+
+      const rect = element.getBoundingClientRect();
+      if (
+        !shouldRepairBrokenOverlay({
+          hint: elementHint(element),
+          hiddenByState: hasHiddenOverlayState(element),
+          width: rect.width,
+          height: rect.height,
+          viewportWidth: windowLike.innerWidth,
+          viewportHeight: windowLike.innerHeight,
+          descendantCoversViewport: hasViewportCoveringDescendant(element, windowLike),
+          productLinkCount: element.querySelectorAll(PRODUCT_LINK_SELECTOR).length,
+        })
+      ) {
+        continue;
+      }
+
+      element.setAttribute?.(REPAIR_ATTRIBUTE, "overlay");
+      repairs += 1;
+    }
+
+    return repairs;
   }
 
   function shouldRestoreLinkGroup(metrics) {
@@ -254,11 +339,13 @@
       headers: count("header"),
       products: count("products"),
       categories: count("categories"),
+      overlays: count("overlay"),
     };
   }
 
   function runRepair(documentLike, windowLike) {
     const results = {
+      overlays: repairBrokenOverlays(documentLike, windowLike),
       headers: repairOversizedHeaders(documentLike, windowLike),
       products: repairHiddenLinkGroups(
         documentLike,
@@ -274,7 +361,8 @@
       ),
     };
     const totals = countRepairRoles(documentLike);
-    const total = totals.headers + totals.products + totals.categories;
+    const total =
+      totals.headers + totals.products + totals.categories + totals.overlays;
 
     documentLike.documentElement?.setAttribute(
       "data-shop-category-repair",
@@ -282,7 +370,7 @@
     );
     documentLike.documentElement?.setAttribute(
       "data-shop-category-repair-actions",
-      `headers:${totals.headers},products:${totals.products},categories:${totals.categories}`
+      `headers:${totals.headers},products:${totals.products},categories:${totals.categories},overlays:${totals.overlays}`
     );
 
     if (total > 0) {
@@ -363,6 +451,8 @@
     isEffectivelyHidden,
     isExcludedContainer,
     isSupportedCategoryLocation,
+    repairBrokenOverlays,
+    shouldRepairBrokenOverlay,
     shouldRepairOversizedElement,
     shouldRestoreLinkGroup,
   };

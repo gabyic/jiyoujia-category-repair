@@ -1,5 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
 const manifest = require("../manifest.json");
 
 const {
@@ -8,12 +10,14 @@ const {
   createMutationObserver,
   isEffectivelyHidden,
   isSupportedCategoryLocation,
+  repairBrokenOverlays,
+  shouldRepairBrokenOverlay,
   shouldRepairOversizedElement,
   shouldRestoreLinkGroup,
 } = require("../repair-category.js");
 
-test("Manifest 1.4.0 在两类数字店铺分类页注入条件式脚本", () => {
-  assert.equal(manifest.version, "1.4.0");
+test("Manifest 1.6.0 在两类数字店铺分类页注入条件式脚本", () => {
+  assert.equal(manifest.version, "1.6.0");
   const repairEntries = manifest.content_scripts.filter((entry) =>
     entry.js?.includes("repair-category.js")
   );
@@ -31,6 +35,13 @@ test("Manifest 1.4.0 在两类数字店铺分类页注入条件式脚本", () =>
         entry.include_globs.includes("https://shop*.taobao.com/category.htm*")
     )
   );
+});
+
+test("Manifest 提供最小权限的通用状态面板", () => {
+  assert.deepEqual(manifest.permissions, ["activeTab", "scripting"]);
+  assert.equal(manifest.host_permissions, undefined);
+  assert.equal(manifest.action.default_popup, "popup.html");
+  assert.match(manifest.action.default_title, /店铺页修复/);
 });
 
 test("只匹配数字极有家和数字淘宝店铺分类页", () => {
@@ -86,6 +97,130 @@ test("只修复靠近页面顶部且异常超高的店招候选", () => {
     }),
     false
   );
+});
+
+test("只标记隐藏、异常巨大且实际覆盖视口的弹层", () => {
+  assert.equal(
+    shouldRepairBrokenOverlay({
+      hint: "all-cats-popup popup-hidden overlay-hidden",
+      hiddenByState: true,
+      width: 10000,
+      height: 100000,
+      viewportWidth: 1920,
+      viewportHeight: 869,
+      descendantCoversViewport: true,
+      productLinkCount: 0,
+    }),
+    true
+  );
+
+  assert.equal(
+    shouldRepairBrokenOverlay({
+      hint: "all-cats-popup popup-hidden overlay-hidden",
+      hiddenByState: true,
+      width: 480,
+      height: 560,
+      viewportWidth: 1920,
+      viewportHeight: 869,
+      descendantCoversViewport: true,
+      productLinkCount: 0,
+    }),
+    false
+  );
+
+  assert.equal(
+    shouldRepairBrokenOverlay({
+      hint: "all-cats-popup",
+      hiddenByState: false,
+      width: 10000,
+      height: 100000,
+      viewportWidth: 1920,
+      viewportHeight: 869,
+      descendantCoversViewport: true,
+      productLinkCount: 0,
+    }),
+    false
+  );
+
+  assert.equal(
+    shouldRepairBrokenOverlay({
+      hint: "product-grid popup-hidden overlay-hidden",
+      hiddenByState: true,
+      width: 10000,
+      height: 100000,
+      viewportWidth: 1920,
+      viewportHeight: 869,
+      descendantCoversViewport: true,
+      productLinkCount: 48,
+    }),
+    false
+  );
+
+  assert.equal(
+    shouldRepairBrokenOverlay({
+      hint: "all-cats-popup popup-hidden overlay-hidden",
+      hiddenByState: true,
+      width: 10000,
+      height: 100000,
+      viewportWidth: 1920,
+      viewportHeight: 869,
+      descendantCoversViewport: false,
+      productLinkCount: 0,
+    }),
+    false
+  );
+});
+
+test("真实异常分类弹层结构会被标记为可逆 overlay", () => {
+  const attributes = new Map();
+  const coveringChild = {
+    getBoundingClientRect() {
+      return { left: 0, top: -509, right: 10002, bottom: 99492 };
+    },
+  };
+  const overlay = {
+    className: "all-cats-popup tb-shop-popup-content popup-hidden overlay-hidden",
+    id: "",
+    hasAttribute() {
+      return false;
+    },
+    getAttribute(name) {
+      return name === "aria-hidden" ? null : "";
+    },
+    getBoundingClientRect() {
+      return { width: 10000, height: 100000 };
+    },
+    querySelectorAll(selector) {
+      return selector === "*" ? [coveringChild] : [];
+    },
+    setAttribute(name, value) {
+      attributes.set(name, value);
+    },
+  };
+  const documentLike = {
+    querySelectorAll() {
+      return [overlay];
+    },
+  };
+
+  assert.equal(
+    repairBrokenOverlays(documentLike, { innerWidth: 1920, innerHeight: 869 }),
+    1
+  );
+  assert.equal(attributes.get("data-shop-category-repair-role"), "overlay");
+});
+
+test("overlay CSS 依赖隐藏状态类，不会永久关闭激活后的菜单", () => {
+  const css = fs.readFileSync(path.join(__dirname, "..", "repair.css"), "utf8");
+  assert.match(
+    css,
+    /\[data-shop-category-repair-role="overlay"\]\.popup-hidden/
+  );
+  assert.match(
+    css,
+    /\[data-shop-category-repair-role="overlay"\]\.overlay-hidden/
+  );
+  assert.doesNotMatch(css, /\.popup-content\s*\{[^}]*display:\s*none/is);
 });
 
 test("识别 display、visibility、零高度裁切等隐藏状态", () => {
@@ -202,6 +337,7 @@ test("诊断数量按页面已修复节点累计，不会被后续复检清零",
     header: 1,
     products: 2,
     categories: 1,
+    overlay: 1,
   };
   const documentLike = {
     querySelectorAll(selector) {
@@ -214,6 +350,7 @@ test("诊断数量按页面已修复节点累计，不会被后续复检清零",
     headers: 1,
     products: 2,
     categories: 1,
+    overlays: 1,
   });
 });
 

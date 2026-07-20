@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>店铺页修复状态</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main class="panel">
+      <header class="panel-header">
+        <div>
+          <p class="eyebrow">淘宝 / 极有家</p>
+          <h1>店铺页修复</h1>
+        </div>
+        <span id="extension-version" class="version">v—</span>
+      </header>
+
+      <p id="page-url" class="page-url">正在读取当前店铺…</p>
+
+      <section id="status-card" class="status-card" data-state="idle" aria-live="polite">
+        <span class="status-dot" aria-hidden="true"></span>
+        <div>
+          <strong id="status-title">正在检查</strong>
+          <p id="status-detail">正在读取本页修复状态。</p>
+        </div>
+      </section>
+
+      <dl id="repair-stats" class="repair-stats" aria-label="本页修复统计">
+        <div><dt>店招</dt><dd id="stat-headers">0</dd></div>
+        <div><dt>商品</dt><dd id="stat-products">0</dd></div>
+        <div><dt>分类</dt><dd id="stat-categories">0</dd></div>
+        <div><dt>弹层</dt><dd id="stat-overlays">0</dd></div>
+      </dl>
+
+      <button id="run-diagnostic" class="button" type="button">
+        复制诊断信息
+      </button>
+
+      <details id="result-section" class="result-section" hidden>
+        <summary>查看详细诊断</summary>
+        <textarea
+          id="diagnostic-result"
+          aria-label="诊断 JSON"
+          readonly
+          spellcheck="false"
+        ></textarea>
+        <div class="actions">
+          <button id="copy-result" class="button" type="button">再次复制</button>
+          <button id="download-result" class="button" type="button">下载 JSON</button>
+        </div>
+      </details>
+
+      <p class="privacy-note">仅在本地检查当前页，不会上传数据。</p>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>
